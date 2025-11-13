@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEGO Item Selector</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .search-bar {
+      padding: 20px 30px;
+      background: #f8f9fa;
+      border-bottom: 2px solid #e9ecef;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    #search-box {
+      flex: 1;
+      padding: 12px 20px;
+      border: 2px solid #dee2e6;
+      border-radius: 25px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    #search-box:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .cart-button {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .cart-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+    }
+
+    .cart-badge {
+      background: white;
+      color: #f5576c;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .content {
+      padding: 30px;
+      max-height: calc(100vh - 250px);
+      overflow-y: auto;
+    }
+
+    .category {
+      margin-bottom: 40px;
+      animation: fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .category h2 {
+      color: #667eea;
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid #667eea;
+      display: inline-block;
+    }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .item {
+      background: white;
+      border: 2px solid #e9ecef;
+      border-radius: 15px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+      border-color: #667eea;
+    }
+
+    .item-image {
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .item-details {
+      flex: 1;
+    }
+
+    .item-name {
+      font-weight: bold;
+      font-size: 16px;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+
+    .item-qty {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .item input[type="number"] {
+      width: 70px;
+      padding: 8px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .add-btn {
+      flex: 1;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .add-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 1.8em;
+    }
+
+    .close-btn {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .close-btn:hover {
+      background: white;
+      color: #667eea;
+    }
+
+    .modal-body {
+      padding: 30px;
+      max-height: calc(90vh - 200px);
+      overflow-y: auto;
+    }
+
+    .cart-item {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .cart-item-image {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      background: white;
+      border-radius: 10px;
+      padding: 5px;
+    }
+
+    .cart-item-details {
+      flex: 1;
+    }
+
+    .cart-item-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .cart-item-category {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .qty-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .qty-btn:hover {
+      background: #764ba2;
+    }
+
+    .remove-btn {
+      background: #f5576c;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .modal-footer {
+      padding: 20px 30px;
+      border-top: 2px solid #e9ecef;
+      display: flex;
+      gap: 15px;
+    }
+
+    .footer-btn {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .download-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .clear-btn {
+      background: #e9ecef;
+      color: #2d3748;
+    }
+
+    .empty-cart {
+      text-align: center;
+      padding: 60px 20px;
+      color: #718096;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #667eea;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🧱 LEGO Item Selector</h1>
+      <p>Build Your Perfect Collection</p>
+    </header>
+
+    <div class="search-bar">
+      <input type="text" id="search-box" placeholder="🔍 Search items or categories...">
+      <button class="cart-button" id="cart-btn">
+        🛒 View Cart
+        <span class="cart-badge" id="cart-count">0</span>
+      </button>
+    </div>
+
+    <div class="content" id="items-container"></div>
+  </div>
+
+  <div class="modal" id="cart-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🛒 Shopping Cart</h2>
+        <button class="close-btn" id="close-cart-btn">Close</button>
+      </div>
+      <div class="modal-body" id="cart-body"></div>
+      <div class="modal-footer">
+        <button class="footer-btn download-btn" id="download-pdf-btn">📄 Download PDF</button>
+        <button class="footer-btn clear-btn" id="clear-cart-btn">🗑️ Clear Cart</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+  <script>
+      const allItems = [
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 3 with stop (24316)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 5.17.00 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 4 with stop (87083)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.07.59 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axel 8 with stop (55013)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.15.12 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 4L with Center Stop (99008)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.25.12 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 5.5 with stud (32209)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.10.13 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 2 with Notch (32062)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.35.54 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 4 (3705)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.07.59 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 5 (32073)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.36.45 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 7 (44294)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.08.57 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 8 (3707)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.37.42 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 9 (60485)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.11.00 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 10 (3737)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.11.00 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 12 (3708)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.11.00 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Axle 16 (50451)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.11.00 PM.png",
+    "qty": "3"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Hose Soft Axle 14L (32201)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.41.49 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "1",
+    "category": "Top Tray  (U1)",
+    "item_name": "Plier",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.46.52 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Gear 8 Tooth (3647)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.02.55 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Gear 12 Tooth Double Bevel (32270)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.42.51 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Gear 16 Tooth (4019)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.14.09 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Gear 24 Tooth (3648)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.04.39 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Gear 40 Tooth (3649)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.05.25 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Bush 1/2 Smooth (4265c)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.19.27 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Bush (3713)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.11.47 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Gear Worm Screw Long (4716)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.21.27 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Pin Connector Round 2L with Slot (62462)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.18.28 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Wedge Belt Wheel (Pulley) (4185)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.17.50 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "String Reel 3 x 2 x 3 Drum with Axle Hole (32012)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 5.19.23 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Pin with Friction Ridges and Pin Hole (15100)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.49.26 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Pin 3L with Friction Ridges and Center Pin Hole (87082)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.23.16 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "2",
+    "category": "Top Tray  (U2)",
+    "item_name": "Pin Connector Perpendicular 3L with 4 Pins ()",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.13.45 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "3",
+    "category": "Top Tray  (U3)",
+    "item_name": "Pin 3/4 (32002)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 5.17.40 PM.png",
+    "qty": "10"
+  },
+  {
+    "sl": "4",
+    "category": "Top Tray  (U4)",
+    "item_name": "Pin 3L with Friction Ridges (6558)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.30.59 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "4",
+    "category": "Top Tray  (U4)",
+    "item_name": "90 degree peg (14166)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.45.25 PM.png",
+    "qty": "12"
+  },
+  {
+    "sl": "5",
+    "category": "Top Tray  (U5)",
+    "item_name": "Axle 1L with Pin without Friction Ridges (43093)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.13.03 PM.png",
+    "qty": "10"
+  },
+  {
+    "sl": "5",
+    "category": "Top Tray  (U5)",
+    "item_name": "Axle 1L with Pin with Friction Ridges (3749)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.11.08 PM.png",
+    "qty": "10"
+  },
+  {
+    "sl": "6",
+    "category": "Top Tray  (U6)",
+    "item_name": "Axle and Pin Connector Perpendicular Double Split (41678)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.08.24 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "6",
+    "category": "Top Tray  (U6)",
+    "item_name": "Axle and Pin Connector Angled #1 (32013)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 5.20.21 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "6",
+    "category": "Top Tray  (U6)",
+    "item_name": "Axle 2L with Reverser Handle (6553)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.29.54 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "7",
+    "category": "Top Tray  (U7)",
+    "item_name": "Axle Connector 2L (Smooth with x Hole) (6538c)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.24.15 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "7",
+    "category": "Top Tray  (U7)",
+    "item_name": "Axle and Pin Connector Angled #2 (32034)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 5.21.15 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "7",
+    "category": "Top Tray  (U7)",
+    "item_name": "Axle and Pin Connector Hub with 1 Axle (22961)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 5.15.17 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "7",
+    "category": "Top Tray  (U7)",
+    "item_name": "Axle and Pin Connector Hub with 2 Perpendicular Axles (10197)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.33.29 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "7",
+    "category": "Top Tray  (U7)",
+    "item_name": "Axle and Pin Connector Angled #4 (32192)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.39.55 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "7",
+    "category": "Top Tray  (U7)",
+    "item_name": "Axle and Pin Connector Triple (10288)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.36.48 PM.png",
+    "qty": "2"
+  },
+
+
+  {
+    "sl": "7",
+    "category": "Top Tray  (U7)",
+    "item_name": "Lift arm (33299)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.53.02 PM.png",
+    "qty": "1"
+  },
+    {
+    "sl": "8",
+    "category": "Top Tray  (U8)",
+    "item_name": "Liftarm Modified Bent Thick L-Shape 2 x 4 (32140)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.38.45 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "8",
+    "category": "Top Tray  (U8)",
+    "item_name": "Liftarm Modified Bent Thick L-Shape 3 x 5 (32526)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.51.59 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "8",
+    "category": "Top Tray  (U8)",
+    "item_name": "Liftarm Modified Bent Thick 1 x 9 (7 - 3) (32271)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.44.29 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "8",
+    "category": "Top Tray  (U8)",
+    "item_name": "Liftarm Modified Bent Thick 1 x 9 (6 - 4) (6629)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.31.58 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "8",
+    "category": "Top Tray  (U8)",
+    "item_name": "Liftarm Modified Bent Thick 1 x 7 (32348)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.48.16 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "8",
+    "category": "Top Tray  (U8)",
+    "item_name": "Liftarm 1 x 11.5 Double Bent Thick (32009)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 5.18.29 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "9",
+    "category": "Top Tray  (U9)",
+    "item_name": "Pin Connector Toggle Joint Smooth Double with Axle and Pin Holes (87408)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.26.01 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "9",
+    "category": "Top Tray  (U9)",
+    "item_name": "Liftarm Modified H-Shape (14720)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.48.17 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "9",
+    "category": "Top Tray  (U9)",
+    "item_name": "7x2 C beam (16109)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.52.31 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "9",
+    "category": "Top Tray  (U9)",
+    "item_name": "11x3x2 Angled block (16015)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.51.44 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "10",
+    "category": "Top Tray  (U10)",
+    "item_name": "Liftarm Thick 1 x 2 (43857)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.12.57 PM.png",
+    "qty": "6"
+  },
+  {
+    "sl": "10",
+    "category": "Top Tray  (U10)",
+    "item_name": "Liftarm Thick 1 x 3 (32523)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.49.26 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "10",
+    "category": "Top Tray  (U10)",
+    "item_name": "Liftarm Thick 1 x 5 (32316)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.47.09 PM.png",
+    "qty": "6"
+  },
+  {
+    "sl": "10",
+    "category": "Top Tray  (U10)",
+    "item_name": "Liftarm Thick 1 x 7 (32524)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.50.23 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "10",
+    "category": "Top Tray  (U10)",
+    "item_name": "Liftarm Thick 1 x 9 (40490)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.54.02 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "10",
+    "category": "Top Tray  (U10)",
+    "item_name": "Liftarm Thick 1 x 11 (32525)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.51.14 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "10",
+    "category": "Top Tray  (U10)",
+    "item_name": "Liftarm Thick 1 x 13",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.06.06 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "11",
+    "category": "Top Tray  (U11)",
+    "item_name": "POM Ball",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.45.07 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "11",
+    "category": "Top Tray  (U11)",
+    "item_name": "Steering Ball Joint Large Receptacle (92911)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.28.01 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "11",
+    "category": "Top Tray  (U11)",
+    "item_name": "Gear Rack 7 (87761)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.26.50 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "11",
+    "category": "Top Tray  (U11)",
+    "item_name": "Gear Rack 1 x 13 with Axle and Pin Holes (64781)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.21.11 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "12",
+    "category": "Top Tray  (U12)",
+    "item_name": "Pin with Short Friction Ridges (2780)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.00.15 PM.png",
+    "qty": "100"
+  },
+  {
+    "sl": "13",
+    "category": "Top Tray  (U13)",
+    "item_name": "Pin without Friction Ridges (3673)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.06.42 PM.png",
+    "qty": "50"
+  },
+  {
+    "sl": "14",
+    "category": "Top Tray  (U14)",
+    "item_name": "Liftarm Thin 1 x 2 - Axle Holes (41677)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.07.08 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "14",
+    "category": "Top Tray  (U14)",
+    "item_name": "Liftarm Modified Bent Thin L-Shape (32056)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.33.42 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "14",
+    "category": "Top Tray  (U14)",
+    "item_name": "Liftarm Modified Triangle Thin (2905)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.01.31 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "14",
+    "category": "Top Tray  (U14)",
+    "item_name": "Liftarm Thick 1 x 2 - Axle Hole (60483)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.15.40 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "14",
+    "category": "Top Tray  (U14)",
+    "item_name": "Axle and Pin Connector Perpendicular (6536)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.23.08 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "14",
+    "category": "Top Tray  (U14)",
+    "item_name": "Axle and Pin Connector Perpendicular 3L with 2 Pin Holes (42003)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.09.47 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "14",
+    "category": "Top Tray  (U14)",
+    "item_name": "Cross Block 3 x 2 (63869)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.19.48 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "14",
+    "category": "Top Tray  (U14)",
+    "item_name": "Liftarm Modified T-Shape Thick 3 x 3 (60484)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.17.25 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "Liftarm Thick 1 x 15 (32278)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 1.45.51 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "DC Motor JM-003 with 2 wires (2569)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.35.44 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "Propellar M130",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.36.37 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "Rubber Band (Small)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.37.15 PM.png",
+    "qty": "5"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "Rubber Band (Large)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.37.15 PM.png",
+    "qty": "5"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "Pulley Belt(Small)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.37.15 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "Pulley Belt (Medium)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.37.15 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "Pulley Belt(Medium Large)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.37.15 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "15",
+    "category": "Bottom Tray  (L1)",
+    "item_name": "Pulley Belt (Large)",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.37.15 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "16",
+    "category": "Bottom Tray  (L2)",
+    "item_name": "Thread Green  1mm",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.38.07 PM.png",
+    "qty": "5"
+  },
+  {
+    "sl": "16",
+    "category": "Bottom Tray  (L2)",
+    "item_name": "Balloon Large Size",
+    "common_names": "",
+    "image": "images/Screenshot 2025-11-06 at 2.28.51 PM.png",
+    "qty": "10"
+  },
+  //{
+  //  "sl": "17",
+  //  "category": "Bottom Tray  (L3)",
+    //"item_name": "N20 Shaft",
+    //"common_names": "",
+    //"image": "images/2780.png",
+    //"qty": "2"
+  //},
+  //{
+    //"sl": "17",
+    //"category": "Bottom Tray  (L3)",
+    //"item_name": "M130 Shaft",
+    //"common_names": "",
+    //"image": "images/2780.png",
+    //"qty": "2"
+  //},
+  //{
+    //"sl": "17",
+    //"category": "Bottom Tray  (L3)",
+    //"item_name": "XG90 Servo Shaft",
+    //"common_names": "",
+    //"image": "images/2780.png",
+    //"qty": "2"
+  //},
+  //{
+    //"sl": "17",
+    //"category": "Bottom Tray  (L3)",
+    //"item_name": "N20 Holder",
+    //"common_names": "",
+    //"image": "images/2780.png",
+    //"qty": "2"
+  //},
+  //{
+    //"sl": "17",
+    //"category": "Bottom Tray  (L3)",
+    //"item_name": "M130 Holder",
+    //"common_names": "",
+    //"image": "images/2780.png",
+    //"qty": "2"
+  //},
+  //{
+    //"sl": "17",
+    //"category": "Bottom Tray  (L3)",
+    //"item_name": "XG90 Servo Holder",
+    //"common_names": "",
+    //"image": "images/2780.png",
+    //"qty": "2"
+  //},
+  {
+    "sl": "18",
+    "category": "Bottom Tray  (L4)",
+    "item_name": "11x5 H block",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.46.34 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "18",
+    "category": "Bottom Tray  (L4)",
+    "item_name": "3 X 11 Technic Plate",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.50.59 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "18",
+    "category": "Bottom Tray  (L4)",
+    "item_name": "7x5 Block",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.47.31 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "18",
+    "category": "Bottom Tray  (L4)",
+    "item_name": "5 X 11 Technic Plate",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.54.51 PM.png",
+    "qty": "3"
+  },
+  {
+    "sl": "19",
+    "category": "Bottom Tray  (L5)",
+    "item_name": "7x7 Block",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.41.17 PM.png",
+    "qty": "1"
+  },
+  {
+    "sl": "19",
+    "category": "Bottom Tray  (L5)",
+    "item_name": "15x5 block",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.40.32 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "19",
+    "category": "Bottom Tray  (L5)",
+    "item_name": "10x5 Block",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.43.22 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "19",
+    "category": "Bottom Tray  (L5)",
+    "item_name": "14x7 Block",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.44.37 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "20",
+    "category": "Bottom Tray  (L6)",
+    "item_name": "Wheel Rim 24mm",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.36.07 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "20",
+    "category": "Bottom Tray  (L6)",
+    "item_name": "Wheel Rim 30 mm",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.15.18 PM.png",
+    "qty": "4"
+  },
+  {
+    "sl": "20",
+    "category": "Bottom Tray  (L6)",
+    "item_name": "Wheel Rim 43 mm",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.16.21 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "20",
+    "category": "Bottom Tray  (L6)",
+    "item_name": "Big Wheel rim",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.38.53 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "21",
+    "category": "Bottom Tray  (L7)",
+    "item_name": "Wheel Tyre 24mm",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.34.50 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "21",
+    "category": "Bottom Tray  (L7)",
+    "item_name": "Wheel Tyre 30 mm",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.20.12 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "21",
+    "category": "Bottom Tray  (L7)",
+    "item_name": "Wheel Tyre 43 mm",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.38.06 PM.png",
+    "qty": "2"
+  },
+  {
+    "sl": "21",
+    "category": "Bottom Tray  (L7)",
+    "item_name": "Big Wheel Tire",
+    "common_names": "",
+    "image": "images/Screenshot 2025-10-29 at 4.39.34 PM.png",
+    "qty": "2"
+  }
+  
+];
+
+    let cart = [];
+
+    function updateCartCount() {
+      const count = cart.reduce((sum, item) => sum + item.qty, 0);
+      document.getElementById('cart-count').textContent = count;
+    }
+
+    function renderItems() {
+      const container = document.getElementById('items-container');
+      const grouped = allItems.reduce((acc, item) => {
+        if (!acc[item.category]) acc[item.category] = [];
+        acc[item.category].push(item);
+        return acc;
+      }, {});
+
+      container.innerHTML = '';
+
+      Object.keys(grouped).forEach(category => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category';
+        categoryDiv.innerHTML = `<h2>${category}</h2>`;
+
+        const grid = document.createElement('div');
+        grid.className = 'items-grid';
+
+        grouped[category].forEach((item, idx) => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'item';
+          
+          const imgSrc = item.image || 'https://via.placeholder.com/150/667eea/ffffff?text=LEGO';
+          
+          itemDiv.innerHTML = `
+            <img src="${imgSrc}" alt="${item.item_name}" class="item-image" onerror="this.src='https://via.placeholder.com/150/667eea/ffffff?text=LEGO'">
+            <div class="item-details">
+              <div class="item-name">${item.item_name}</div>
+              <div class="item-qty">📦 Available: ${item.qty}</div>
+            </div>
+            <div class="item-actions">
+              <input type="number" min="1" max="${item.qty}" value="1" class="qty-input" data-index="${allItems.indexOf(item)}">
+              <button class="add-btn" data-index="${allItems.indexOf(item)}">Add to Cart</button>
+            </div>
+          `;
+          
+          grid.appendChild(itemDiv);
+        });
+
+        categoryDiv.appendChild(grid);
+        container.appendChild(categoryDiv);
+      });
+
+      document.querySelectorAll('.add-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          const index = parseInt(this.getAttribute('data-index'));
+          addToCart(index);
+        });
+      });
+    }
+
+    function addToCart(index) {
+      const item = allItems[index];
+      const input = document.querySelector(`.qty-input[data-index="${index}"]`);
+      const qty = parseInt(input.value) || 1;
+      
+      const existing = cart.find(c => c.item_name === item.item_name);
+      if (existing) {
+        existing.qty += qty;
+      } else {
+        cart.push({ ...item, qty });
+      }
+
+      updateCartCount();
+      input.value = 1;
+      showNotification('✅ Added to cart!');
+    }
+
+    function openCart() {
+      renderCart();
+      document.getElementById('cart-modal').classList.add('active');
+    }
+
+    function closeCart() {
+      document.getElementById('cart-modal').classList.remove('active');
+    }
+
+    function renderCart() {
+      const body = document.getElementById('cart-body');
+      
+      if (cart.length === 0) {
+        body.innerHTML = '<div class="empty-cart"><h3>Your cart is empty</h3><p>Add some items to get started!</p></div>';
+        return;
+      }
+
+      body.innerHTML = '';
+      cart.forEach((item, idx) => {
+        const imgSrc = item.image || 'https://via.placeholder.com/80/667eea/ffffff?text=LEGO';
+        
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          <img src="${imgSrc}" class="cart-item-image" onerror="this.src='https://via.placeholder.com/80/667eea/ffffff?text=LEGO'">
+          <div class="cart-item-details">
+            <div class="cart-item-name">${item.item_name}</div>
+            <div class="cart-item-category">${item.category}</div>
+          </div>
+          <div class="cart-item-qty">
+            <button class="qty-btn minus-btn" data-index="${idx}">−</button>
+            <span>${item.qty}</span>
+            <button class="qty-btn plus-btn" data-index="${idx}">+</button>
+          </div>
+          <button class="remove-btn" data-index="${idx}">Remove</button>
+        `;
+        body.appendChild(div);
+      });
+
+      document.querySelectorAll('.minus-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          updateQty(parseInt(this.getAttribute('data-index')), -1);
+        });
+      });
+
+      document.querySelectorAll('.plus-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          updateQty(parseInt(this.getAttribute('data-index')), 1);
+        });
+      });
+
+      document.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          removeItem(parseInt(this.getAttribute('data-index')));
+        });
+      });
+    }
+
+    function updateQty(index, change) {
+      cart[index].qty += change;
+      if (cart[index].qty < 1) cart[index].qty = 1;
+      renderCart();
+      updateCartCount();
+    }
+
+    function removeItem(index) {
+      cart.splice(index, 1);
+      renderCart();
+      updateCartCount();
+    }
+
+    function clearCart() {
+      if (confirm('Clear all items?')) {
+        cart = [];
+        renderCart();
+        updateCartCount();
+      }
+    }
+
+    function searchItems() {
+      const query = document.getElementById('search-box').value.toLowerCase();
+      const categories = document.querySelectorAll('.category');
+
+      categories.forEach(category => {
+        let anyVisible = false;
+        const items = category.querySelectorAll('.item');
+        
+        items.forEach(item => {
+          const name = item.querySelector('.item-name').textContent.toLowerCase();
+          if (name.includes(query)) {
+            item.style.display = 'flex';
+            anyVisible = true;
+          } else {
+            item.style.display = 'none';
+          }
+        });
+
+        category.style.display = anyVisible ? 'block' : 'none';
+      });
+    }
+
+    async function downloadPDF() {
+      if (cart.length === 0) {
+        alert('Cart is empty!');
+        return;
+      }
+
+      const title = prompt('Enter PDF Title:', 'Order Summary');
+      if (!title) return;
+
+      const author = prompt('Enter Author:', 'Your Name');
+      if (!author) return;
+
+      showNotification('⏳ Generating PDF with images...');
+
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFontSize(20);
+        doc.setTextColor(102, 126, 234);
+        doc.text('Yudu Robotics', 105, 20, { align: 'center' });
+
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 0);
+        doc.text(title, 14, 35);
+
+        doc.setFontSize(12);
+        doc.text('Author: ' + author, 14, 43);
+        doc.text('Date: ' + new Date().toLocaleDateString(), 14, 50);
+
+        const imageData = [];
+        for (let i = 0; i < cart.length; i++) {
+          if (cart[i].image && !cart[i].image.includes('placeholder')) {
+            try {
+              const base64 = await getBase64Image(cart[i].image);
+              imageData[i] = base64;
+            } catch (err) {
+              imageData[i] = null;
+            }
+          } else {
+            imageData[i] = null;
+          }
+        }
+
+        const tableData = cart.map((item, idx) => [
+          '',
+          item.category,
+          item.item_name,
+          item.qty.toString()
+        ]);
+
+        doc.autoTable({
+          head: [['Image', 'Category', 'Item Name', 'Qty']],
+          body: tableData,
+          startY: 58,
+          theme: 'striped',
+          headStyles: {
+            fillColor: [102, 126, 234],
+            fontSize: 11,
+            fontStyle: 'bold'
+          },
+          columnStyles: {
+            0: { cellWidth: 25, halign: 'center' }
+          },
+          styles: {
+            fontSize: 10,
+            cellPadding: 3,
+            minCellHeight: 20
+          },
+          didDrawCell: function(data) {
+            if (data.section === 'body' && data.column.index === 0 && imageData[data.row.index]) {
+              try {
+                doc.addImage(
+                  imageData[data.row.index],
+                  'PNG',
+                  data.cell.x + 2.5,
+                  data.cell.y + 2,
+                  20,
+                  16
+                );
+              } catch (err) {
+                console.error('Error adding image:', err);
+              }
+            }
+          }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'bold');
+        doc.text(`Total Items: ${cart.length}`, 14, finalY);
+        doc.text(`Total Quantity: ${cart.reduce((s, i) => s + i.qty, 0)}`, 14, finalY + 8);
+
+        doc.save('lego-order.pdf');
+        showNotification('✅ PDF Downloaded!');
+      } catch (error) {
+        console.error('PDF Error:', error);
+        showNotification('❌ PDF generation failed');
+      }
+    }
+
+    function getBase64Image(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        
+        img.onerror = () => reject(new Error('Image load failed'));
+        img.src = url;
+      });
+    }
+
+    function showNotification(msg) {
+      const notif = document.createElement('div');
+      notif.style.cssText = 'position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:15px 25px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.3);z-index:9999;';
+      notif.textContent = msg;
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 2500);
+    }
+
+    document.getElementById('cart-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      openCart();
+    });
+
+    document.getElementById('close-cart-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      closeCart();
+    });
+
+    document.getElementById('download-pdf-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      downloadPDF();
+    });
+
+    document.getElementById('clear-cart-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      clearCart();
+    });
+
+    document.getElementById('search-box').addEventListener('keyup', searchItems);
+
+    renderItems();
+    updateCartCount();
+  </script>
+</body>
+</html>
